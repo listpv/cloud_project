@@ -49,7 +49,6 @@ public class Client
                             if (!cont)  // авторизация
                             {
                                 authorizationClient(tokens);
-                       out.write(tokens[1].getBytes());
 
                             }
                             else
