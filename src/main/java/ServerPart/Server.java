@@ -57,11 +57,13 @@ public class Server
     public void subscribe(ClientHandler client)
     {
         clients.add(client);
+        System.out.println("Клиент " + client.getNick() + " авторизовался.");
     }
 
     // удаление клиента из списка.
     public void unsubscribe(ClientHandler client)
     {
+        System.out.println("Клиент " + client.getNick() + " устранился.");
         clients.remove(client);
     }
 
@@ -81,6 +83,7 @@ public class Server
 
     public static void main(String[] args)
     {
-        Server serv = new Server();
+//        Server serv = new Server();
+        new Server();
     }
 }
