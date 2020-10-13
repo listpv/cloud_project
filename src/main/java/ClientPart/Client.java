@@ -111,7 +111,6 @@ public class Client
                                 cont = true;  // если авторизация прошла удачно.
                                 Files.createDirectories(Paths.get("ClientFiles", loginName));
                                 filesOnClient();
-//                                out.write(23);
                             }
                             // получение и запись загруженного с сервера файла в репозиторий клиента.
                             else if (x == 21)
