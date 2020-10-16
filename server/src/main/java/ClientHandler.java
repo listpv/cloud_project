@@ -1,13 +1,8 @@
-package ServerPart;
-
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
-// класс, отвечающий за работу сервера с клиентом.
 public class ClientHandler
 {
     private Socket socket;
@@ -61,7 +56,7 @@ public class ClientHandler
                             {
                                 sendingFile();
                             }
-                            //  передача содержимого репозитория клиента.
+                            //  передача содержимого удалённого репозитория клиента.
                             else if(x == 23)
                             {
                                 fileListToClient();
@@ -157,7 +152,6 @@ public class ClientHandler
         in.read(fileNameBytes);
         String fileName = new String(fileNameBytes);
         long fileSize = in.readLong();
-//        try(OutputStream out = new BufferedOutputStream(new FileOutputStream("ServerFiles/" + nick + "/" + fileName)))
         try (OutputStream outFile = new BufferedOutputStream(new FileOutputStream(dir + "/" + fileName)))
         {
             for(int i = 0; i <fileSize; i++)
@@ -165,7 +159,6 @@ public class ClientHandler
                 outFile.write(in.read());
             }
         }
-//        out.write(5);       //   для варианта с одним потоком  !!!
     }
 
     // удаление файла.
@@ -176,7 +169,6 @@ public class ClientHandler
         in.read(delFileNameBytes);
         String delFileName = new String(delFileNameBytes);
         Files.deleteIfExists(Paths.get("ServerFiles/" + nick + "/" + delFileName));
-//        out.write(5);       //   для варианта с одним потоком !!!
     }
 
     // переименование файла.
@@ -190,10 +182,7 @@ public class ClientHandler
         byte[] dstFileNameBytes = new byte[dstFileNameSize];
         in.read(dstFileNameBytes);
         String dstFileName = new String(dstFileNameBytes);
-//        Files.copy(Paths.get("ServerFiles/" + nick + "/" + srcFileName), Paths.get("ServerFiles/" + nick + "/" + dstFileName));
-//        Files.delete(Paths.get("ServerFiles/" + nick + "/" + srcFileName));
         Files.move(Paths.get("ServerFiles/" + nick + "/" + srcFileName), Paths.get("ServerFiles/" + nick + "/" + dstFileName));
-//        out.write(5);       //   для варианта с одним потоком  !!!
     }
 
     // отправка файла

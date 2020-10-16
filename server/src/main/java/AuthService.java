@@ -1,6 +1,4 @@
-package ServerPart;
-
-import com.sun.istack.internal.Nullable;
+//import com.sun.istack.internal.Nullable;
 
 import java.sql.*;
 
@@ -23,8 +21,7 @@ public class AuthService
         }
     }
 
-    public static @Nullable
-    String getNickByLogAndPass(String login, String pass)
+    public static String getNickByLogAndPass(String login, String pass)
     {
         String sql = String.format("select login from main where login = '%s' and password = '%s'", login, pass);
         try
