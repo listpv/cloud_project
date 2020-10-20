@@ -13,8 +13,7 @@ public class ClientGraph extends JFrame
     DataInputStream in;
     DataOutputStream out;
     boolean cont;          // переменная, отображающая состояние авторизации.
-    Scanner sc;
-    String loginName;
+    String loginName;      // login клиента, имя папки.
 
     // Два списка и котейнеры для их содержимого.
     DefaultListModel<String> clientListModel = new DefaultListModel();
@@ -29,13 +28,16 @@ public class ClientGraph extends JFrame
 
     // кнопки основной панели.
     JButton uploadButton;
-    JButton deleteButton;
+    JButton deleteServerButton;
     JButton downloadButton;
-    JButton renameButton;
+    JButton renameServerButton;
+    JButton deleteClientButton;
+    JButton renameClientButton;
 
     // элементы панели авторизации.
     JTextField loginField;
     JButton authButton;
+    JButton newUserButton;
     JTextArea commentArea;
 
 
@@ -56,7 +58,7 @@ public class ClientGraph extends JFrame
                 @Override
                 public void run()
                 {
-                    System.out.println("Авторизация: login1 pass1, login2 pass2, login3 pass3, login4 pass4, login5 pass5." );
+                    System.out.println("Авторизация: login1 pass1, login2 pass2, login3 pass3, login4 pass4, login5 pass5, login6 pass6" );
 
                     try
                     {
@@ -70,6 +72,7 @@ public class ClientGraph extends JFrame
                                 commentArea.setText("Wrong personal data.");
                                 loginField.requestFocus();
                                 authButton.setEnabled(false);
+                                newUserButton.setEnabled(false);
                                 loginName = null;
                             }
                             // если такой пользователь уже активен.
@@ -78,6 +81,7 @@ public class ClientGraph extends JFrame
                                 commentArea.setText(loginName + " is already in process.");
                                 loginField.requestFocus();
                                 authButton.setEnabled(false);
+                                newUserButton.setEnabled(false);
                                 loginName = null;
                             }
                             // если авторизация прошла успешно.
@@ -85,11 +89,20 @@ public class ClientGraph extends JFrame
                             {
                                 cont = true;  // если авторизация прошла удачно.
                                 Files.createDirectories(Paths.get("ClientFiles", loginName));
-                                setTitle(loginName);
+                                setTitle("User " + loginName);
                                 authPanel.setVisible(false);
                                 basicPanel.setVisible(true);
                                 filesOnClient();
                                 out.write(23);
+                            }
+                            // если не получилось создание нового клиента.
+                            else if(x == 3)
+                            {
+                                commentArea.setText("User " + loginName + " is already exists.");
+                                loginField.requestFocus();
+                                authButton.setEnabled(false);
+                                newUserButton.setEnabled(false);
+                                loginName = null;
                             }
                             // получение и запись загруженного с сервера файла в репозиторий клиента.
                             else if (x == 21)
@@ -134,16 +147,17 @@ public class ClientGraph extends JFrame
         }
     }
 
+    // создание окна.
     public void prepareGUI() {
         // Параметры окна
         setBounds(600, 300, 600, 600);
-        setTitle("Клиент");
+        setTitle("User");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-
+        // панель авторизации.
         authPanel = new JPanel(new BorderLayout());
         // составляющие панели авторизации.
-        JPanel upAuthPanel = new JPanel(new FlowLayout());
+        JPanel upAuthPanel = new JPanel(new FlowLayout());  // верхняя панель.
         commentArea = new JTextArea();
         commentArea.setEditable(false);
         JLabel loginLabel = new JLabel("Enter login");
@@ -153,51 +167,64 @@ public class ClientGraph extends JFrame
         JPasswordField passwordField = new JPasswordField();
         passwordField.setPreferredSize(new Dimension(80, 20));
         authButton = new JButton("Auth");
+        newUserButton = new JButton("New User");
         upAuthPanel.add(loginLabel);
         upAuthPanel.add(loginField);
         upAuthPanel.add(passwordLabel);
         upAuthPanel.add(passwordField);
         upAuthPanel.add(authButton);
+        upAuthPanel.add(newUserButton);
         authButton.setEnabled(false);
+        newUserButton.setEnabled(false);
         authPanel.add(upAuthPanel, BorderLayout.NORTH);
         authPanel.add(commentArea, BorderLayout.CENTER);
         add(authPanel, BorderLayout.NORTH);
         loginField.requestFocus();
 
+        // основная панель
         basicPanel = new JPanel(new GridLayout(1, 3));
         // составляющие основной панели.
         clientList = new JList(clientListModel);
         clientList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         serverList = new JList(serverListModel);
         serverList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JPanel clientPanel = new JPanel(new BorderLayout());  // 1-я часть.
-        JPanel serverPanel = new JPanel(new BorderLayout());  // 2-я часть.
+        JPanel clientPanel = new JPanel(new BorderLayout());  // 1-я часть со списком клиента.
+//        JPanel serverPanel = new JPanel(new BorderLayout());  // 2-я часть со списком сервера.
         JLabel clientRepo = new JLabel("Client repo");
-        JLabel serverRepo = new JLabel("Server repo");
+//        JLabel serverRepo = new JLabel("Server repo");
         clientPanel.add(clientRepo, BorderLayout.NORTH);
         clientPanel.add(new JScrollPane(clientList), BorderLayout.CENTER);
+        JPanel serverPanel = new JPanel(new BorderLayout());  // 2-я часть со списком сервера.
+        JLabel serverRepo = new JLabel("Server repo");
         serverPanel.add(serverRepo, BorderLayout.NORTH);
         serverPanel.add(new JScrollPane(serverList), BorderLayout.CENTER);
-        JPanel bottomPanel = new JPanel(null);          // 3-я часть
+        JPanel bottomPanel = new JPanel(null);          // 3-я часть с кнопками.
         uploadButton = new JButton("Upload");
-        deleteButton = new JButton("Delete");
+        deleteServerButton = new JButton("<<Delete");
         downloadButton = new JButton("Download");
-        renameButton = new JButton("Rename");
-        uploadButton.setBounds(40,10,100,20);
-        deleteButton.setBounds(40,50,100,20);
-        downloadButton.setBounds(40, 90,  100, 20);
-        renameButton.setBounds(40, 130, 100, 20);
+        renameServerButton = new JButton("<<Rename");
+        deleteClientButton = new JButton("Delete>>");
+        renameClientButton = new JButton("Rename>>");
+        downloadButton.setBounds(40, 10,  100, 20);
+        deleteServerButton.setBounds(40,50,100,20);
+        renameServerButton.setBounds(40, 90, 100, 20);
+        uploadButton.setBounds(40,130,100,20);
+        deleteClientButton.setBounds(40, 170, 100, 20);
+        renameClientButton.setBounds(40, 210, 100, 20);
         bottomPanel.add(uploadButton);
-        bottomPanel.add(deleteButton);
+        bottomPanel.add(deleteServerButton);
+        bottomPanel.add(renameServerButton);
         bottomPanel.add(downloadButton);
-        bottomPanel.add(renameButton);
+        bottomPanel.add(deleteClientButton);
+        bottomPanel.add(renameClientButton);
         basicPanel.add(serverPanel);
         basicPanel.add(bottomPanel);
         basicPanel.add(clientPanel);
         add(basicPanel, BorderLayout.CENTER);
-        basicPanel.setVisible(false);
+        basicPanel.setVisible(false);           // сначала видна только панель авторизации.
 
 
+        // обработка элементов панели авторизации.
         // обработка элементов как для выполнения необходимых функций, так и для максимального предотвращения ошибок.
         loginField.addKeyListener(new KeyListener() {
             @Override
@@ -210,6 +237,7 @@ public class ClientGraph extends JFrame
             {
             }
 
+            // кнопки панели активации активны только при наличии текста в loginField и passwordField
             @Override
             public void keyReleased(KeyEvent e)
             {
@@ -217,13 +245,16 @@ public class ClientGraph extends JFrame
                         || passwordField.getPassword().length == 0 || passwordField.getPassword() == null)
                 {
                     authButton.setEnabled(false);
+                    newUserButton.setEnabled(false);
                 }
                 else
                 {
                     authButton.setEnabled(true);
+                    newUserButton.setEnabled(true);
                 }
             }
         });
+        // использование клавиши "Enter"
         loginField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e)
@@ -237,6 +268,7 @@ public class ClientGraph extends JFrame
                 passwordField.requestFocus();
             }
         });
+        // кнопки панели активации активны только при наличии текста в loginField и passwordField
         passwordField.addKeyListener(new KeyListener() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -255,13 +287,16 @@ public class ClientGraph extends JFrame
                         || passwordField.getPassword().length == 0 || passwordField.getPassword() == null)
                 {
                     authButton.setEnabled(false);
+                    newUserButton.setEnabled(false);
                 }
                 else
                 {
                     authButton.setEnabled(true);
+                    newUserButton.setEnabled(true);
                 }
             }
         });
+        // использование клавиши "Enter", можно авторизоваться.
         passwordField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e)
@@ -290,6 +325,7 @@ public class ClientGraph extends JFrame
             }
         });
 
+        // авторизация.
         authButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -313,6 +349,30 @@ public class ClientGraph extends JFrame
             }
         });
 
+        // регистрация нового пользователя и авторизация, в случае успеха.
+        newUserButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String str;
+                char[] passChar = passwordField.getPassword();
+                String passStr = "";
+                for(int i = 0; i < passChar.length; i++)
+                {
+                    passStr = passStr + passChar[i];
+                    passChar[i] = '$';
+                }
+                str = loginField.getText() + " " + passStr;
+                loginField.setText("");
+                passwordField.setText("");
+                try {
+                    registrationClient(str.split(" "));
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+        });
+
+        // обработка элементов основной панели.
         uploadButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e)
@@ -328,7 +388,7 @@ public class ClientGraph extends JFrame
                     }
                 }
                 try {
-                    uploadFile1(str);
+                    uploadFile(str);
                     out.write(23);
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
@@ -336,12 +396,18 @@ public class ClientGraph extends JFrame
             }
         });
 
-        deleteButton.addActionListener(new ActionListener() {
+        deleteServerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String str = serverListModel.getElementAt(serverList.getSelectedIndex());
+                int result = JOptionPane.showConfirmDialog(ClientGraph.this,
+                        "Do you really want to delete ServerFiles/" + loginName + "/" + str, "Info", JOptionPane.OK_CANCEL_OPTION);
+                if(result == JOptionPane.CANCEL_OPTION)
+                {
+                    return;
+                }
                 try {
-                    deleteFile1(str);
+                    deleteFile(str);
                     out.write(23);
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
@@ -357,21 +423,21 @@ public class ClientGraph extends JFrame
                 if(checkClientFile(str))
                 {
                     int result = JOptionPane.showConfirmDialog(ClientGraph.this,
-                            "File " + str + " i alredy exist. Rewrite it?", "Info", JOptionPane.OK_CANCEL_OPTION);
+                            "File " + str + " is alredy exist. Rewrite it?", "Info", JOptionPane.OK_CANCEL_OPTION);
                     if(result == JOptionPane.CANCEL_OPTION)
                     {
                         return;
                     }
                 }
                 try {
-                    downLoadFile1(str);
+                    downLoadFile(str);
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
                 }
             }
         });
 
-        renameButton.addActionListener(new ActionListener() {
+        renameServerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e)
             {
@@ -384,24 +450,79 @@ public class ClientGraph extends JFrame
                 if(checkServerFile(newName))
                 {
                     int result = JOptionPane.showConfirmDialog(ClientGraph.this,
-                            "File " + newName + " i alredy exist. Rewrite it?", "Info", JOptionPane.OK_CANCEL_OPTION);
+                            "File ServerFiles/" + loginName + "/" + newName + " is alredy exist. Rewrite it?", "Info", JOptionPane.OK_CANCEL_OPTION);
                     if(result == JOptionPane.CANCEL_OPTION)
                     {
                         return;
                     }
                     try {
-                        deleteFile1(newName);
+                        deleteFile(newName);
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
                 }
                 try {
-                    renameFile1(str, newName);
+                    renameFile(str, newName);
                     out.write(23);
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
                 }
 
+            }
+        });
+
+        deleteClientButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String str = clientListModel.getElementAt(clientList.getSelectedIndex());
+                int result = JOptionPane.showConfirmDialog(ClientGraph.this,
+                        "Do you really want to delete ClientFiles/" + loginName + "/" + str, "Info", JOptionPane.OK_CANCEL_OPTION);
+                if(result == JOptionPane.CANCEL_OPTION)
+                {
+                    return;
+                }
+                try
+                {
+                    Files.deleteIfExists(Paths.get("ClientFiles/" + loginName + "/" + str));
+                    filesOnClient();
+                }
+                catch (IOException ioException)
+                {
+                    ioException.printStackTrace();
+                }
+            }
+
+        });
+        renameClientButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String str = clientListModel.getElementAt(clientList.getSelectedIndex());
+                String newName = JOptionPane.showInputDialog(ClientGraph.this, "Enter new name");
+                if(newName == null || newName.length() == 0)
+                {
+                    return;
+                }
+                if(checkClientFile(newName))
+                {
+                    int result = JOptionPane.showConfirmDialog(ClientGraph.this,
+                            "File ClientFiles/" + loginName + "/" + newName + " is alredy exist. Rewrite it?", "Info", JOptionPane.OK_CANCEL_OPTION);
+                    if(result == JOptionPane.CANCEL_OPTION)
+                    {
+                        return;
+                    }
+                    try
+                    {
+                        Files.deleteIfExists(Paths.get("ClientFiles/" + loginName + "/" + newName));
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+                }
+                try {
+                    Files.move(Paths.get("ClientFiles/" +loginName + "/" + str), Paths.get("ClientFiles/" + loginName + "/" + newName));
+                    filesOnClient();
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
             }
         });
 
@@ -421,6 +542,17 @@ public class ClientGraph extends JFrame
         setVisible(true);
     }
 
+    // регистрация нового клиента.
+    public void registrationClient(String[] tokens) throws IOException {
+        out.write(7);
+        loginName = tokens[0];
+        short loginSize = (short) tokens[0].length();
+        out.writeShort(loginSize);
+        out.write(tokens[0].getBytes());
+        short passSize = (short) tokens[1].length();
+        out.writeShort(passSize);
+        out.write(tokens[1].getBytes());
+    }
 
     //   авторизация.
     public void authorizationClient(@org.jetbrains.annotations.NotNull String[] tokens) throws IOException
@@ -436,7 +568,7 @@ public class ClientGraph extends JFrame
     }
 
     //  выгрузка файла с клиента на сервер.
-    public void uploadFile1(String str) throws IOException
+    public void uploadFile(String str) throws IOException
     {
         out.write(15);
         short fileNameSize = (short) str.length();
@@ -456,7 +588,7 @@ public class ClientGraph extends JFrame
 
 
     // удаление файла на сервере.
-    public void deleteFile1(String str) throws IOException {
+    public void deleteFile(String str) throws IOException {
         out.write(17);
         short delFileNameSize = (short) str.length();
         out.writeShort(delFileNameSize);
@@ -465,7 +597,7 @@ public class ClientGraph extends JFrame
 
 
     // переименование файла на сервере.
-    public void renameFile1(String str1, String str2) throws IOException
+    public void renameFile(String str1, String str2) throws IOException
     {
         out.write(19);
         short srcFileSize = (short) str1.length();
@@ -477,7 +609,7 @@ public class ClientGraph extends JFrame
     }
 
     // загрузка файла с сервера на клиент.
-    public void downLoadFile1(String str) throws IOException {
+    public void downLoadFile(String str) throws IOException {
         out.write(21);
         short necessaryFileSize = (short) str.length();
         out.writeShort(necessaryFileSize);
@@ -502,7 +634,8 @@ public class ClientGraph extends JFrame
         }
     }
 
-    // получение списка файлов с сервера.
+    // получение списка файлов с сервера, здесь же происходит проверка для неактивности
+    // соответствующих кнопок при отсутствии файлов в репозитории User на сервере.
     public void filesFromServer() throws IOException
     {
         serverListModel.removeAllElements();
@@ -518,14 +651,14 @@ public class ClientGraph extends JFrame
         int index = serverListModel.size() - 1;
         if(index < 0)
         {
-            deleteButton.setEnabled(false);
-            renameButton.setEnabled(false);
+            deleteServerButton.setEnabled(false);
+            renameServerButton.setEnabled(false);
             downloadButton.setEnabled(false);
         }
         else
         {
-            deleteButton.setEnabled(true);
-            renameButton.setEnabled(true);
+            deleteServerButton.setEnabled(true);
+            renameServerButton.setEnabled(true);
             downloadButton.setEnabled(true);
             serverList.setSelectedIndex(index);
         }
@@ -533,7 +666,8 @@ public class ClientGraph extends JFrame
         System.out.println();
     }
 
-    // получение списка файлов от клиента.
+    // получение списка файлов от клиента, здесь же происходит проверка для неактивности
+    // соответствующих кнопок при отсутствии файлов в репозитории User на клиенте.
     public void filesOnClient()
     {
         clientListModel.removeAllElements();
@@ -546,16 +680,20 @@ public class ClientGraph extends JFrame
         if(index < 0)
         {
             uploadButton.setEnabled(false);
+            deleteClientButton.setEnabled(false);
+            renameClientButton.setEnabled(false);
         }
         else
         {
             uploadButton.setEnabled(true);
+            deleteClientButton.setEnabled(true);
+            renameClientButton.setEnabled(true);
             clientList.setSelectedIndex(index);
         }
         System.out.println();
     }
 
-    // проверяет на наличие файлы на клиенте.
+    // проверяет на наличие файлы в репозитории User на клиенте.
     public boolean checkClientFile(String str)
     {
         for(int i = 0; i < clientListModel.size(); i++)
@@ -568,7 +706,7 @@ public class ClientGraph extends JFrame
         return false;
     }
 
-    // проверяет на наличие файлы на сервере.
+    // проверяет на наличие файлы в репозитории User на сервере.
     public boolean checkServerFile(String str)
     {
         for(int i = 0; i < serverListModel.size(); i++)

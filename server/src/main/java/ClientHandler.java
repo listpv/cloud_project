@@ -30,8 +30,13 @@ public class ClientHandler
                         while (true)
                         {
                             int x = in.read();
+                            // регистрация.
+                            if(x == 7)
+                            {
+                               registration();
+                            }
                             // авторизация.
-                            if(x == 9)
+                            else if(x == 9)
                             {
                                 authorization();
                             }
@@ -56,13 +61,13 @@ public class ClientHandler
                             {
                                 sendingFile();
                             }
-                            //  передача содержимого удалённого репозитория клиента.
+                            //  передача содержимого репозиторию User на клиенте.
                             else if(x == 23)
                             {
                                 fileListToClient();
 
                             }
-                            // окончание работы клиента.  для варианта с двумя потоками  !!!
+                            // окончание работы клиента.
                             else if (x == 99)
                             {
                                 out.write(99);
@@ -112,6 +117,40 @@ public class ClientHandler
         }
     }
 
+    // регистрация нового клиента.
+    public void registration() throws IOException
+    {
+        short loginSize = in.readShort();
+        byte[] loginBytes = new byte[loginSize];
+        in.read(loginBytes);
+        String login = new String(loginBytes);
+        short passSize = in.readShort();
+        byte[] passBytes = new byte[passSize];
+        in.read(passBytes);
+        String pass = new String(passBytes);
+            int result = AuthService.registrationClient(login, pass);
+            if(result == 0) // не удалось добавить.
+            {
+                out.write(3);
+            }
+            else   // удалось добавить.
+            {
+                // сразу авторизация.
+                String newNick = AuthService.getNickByLogAndPass(login, pass);
+                if(newNick == null) // User не авторизовался, теоретически так не должно быть!!!
+                {
+                    out.write(1);
+                }
+                else   // User успешно авторизрвался.
+                {
+                    nick = newNick;
+                    dir = Files.createDirectories(Paths.get("ServerFiles", nick));
+                    server.subscribe(ClientHandler.this);  // клиент вносится в список.
+                    out.write(2);
+                }
+            }
+    }
+
     // авторизация.
     public void authorization() throws IOException
     {
@@ -144,7 +183,7 @@ public class ClientHandler
         }
     }
 
-    // передача файла.
+    // получение и запись файла.
     public void gettingFile() throws IOException
     {
         short fileNameSize = in.readShort();
@@ -185,7 +224,7 @@ public class ClientHandler
         Files.move(Paths.get("ServerFiles/" + nick + "/" + srcFileName), Paths.get("ServerFiles/" + nick + "/" + dstFileName));
     }
 
-    // отправка файла
+    // отправка файла в репозиторий User на клиенте.
     public void sendingFile() throws IOException
     {
         short sendFileNameSize = in.readShort();
@@ -207,7 +246,7 @@ public class ClientHandler
         }
     }
 
-    //  передача содержимого репозитория клиента
+    //  передача содержимого  в репозиторий User на клиенте.
     public void fileListToClient() throws IOException
     {
         out.write(23);

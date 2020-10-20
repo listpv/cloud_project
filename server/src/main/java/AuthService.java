@@ -1,13 +1,14 @@
-//import com.sun.istack.internal.Nullable;
 
 import java.sql.*;
 
+// класс для работы с БД.
 public class AuthService
 {
     private static Connection connection;
     private static Statement statement;
 
-    public static void connect()      // подключение БД
+    // подключение БД.
+    public static void connect()
     {
         try
         {
@@ -21,9 +22,42 @@ public class AuthService
         }
     }
 
+
+    // регистрация нового User.
+    public static int registrationClient(String login, String pass)
+    {
+        int result = 0;
+        String sql = String.format("insert into myProject (login, password) values ('%s', '%s')", login, pass);
+        try
+        {
+            result = statement.executeUpdate(sql);
+        }
+        catch (SQLException throwables)
+        {
+//            throwables.printStackTrace();
+            System.out.println(login + " is exists.");
+        }
+        return result;
+    }
+
+    // получение данных всех пользователей.
+    public static ResultSet listClientData()  {
+        ResultSet rs = null;
+        try
+        {
+            rs = statement.executeQuery("select * from myProject");
+        }
+        catch (SQLException throwables)
+        {
+            throwables.printStackTrace();
+        }
+        return rs;
+    }
+
+    // авторизация пользователя.
     public static String getNickByLogAndPass(String login, String pass)
     {
-        String sql = String.format("select login from main where login = '%s' and password = '%s'", login, pass);
+        String sql = String.format("select login from myProject where login = '%s' and password = '%s'", login, pass);
         try
         {
             ResultSet rs = statement.executeQuery(sql);
@@ -39,6 +73,7 @@ public class AuthService
         return null;
     }
 
+    // завершение работы с БД.
     public static void disconnect()
     {
         try
