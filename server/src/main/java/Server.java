@@ -1,8 +1,8 @@
-package ServerPart;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Vector;
 
 public class Server
@@ -20,7 +20,7 @@ public class Server
             server = new ServerSocket(8189);
             System.out.println("Сервер запущен. Ожидаем подключения... .");
             clients = new Vector<>();
-
+            printDataClients(AuthService.listClientData());  // нет необходимости, для информации.
             while (true)
             {
                 socket = server.accept();
@@ -28,7 +28,7 @@ public class Server
                 new ClientHandler(this, socket);
             }
         }
-        catch (IOException e)
+        catch (IOException | SQLException e)
         {
             e.printStackTrace();
         } finally
@@ -50,6 +50,15 @@ public class Server
                 e.printStackTrace();
             }
             AuthService.disconnect();
+        }
+    }
+
+    public void printDataClients(ResultSet rs) throws SQLException
+    {
+        System.out.println("Data of clients:");
+        while (rs.next())
+        {
+            System.out.println(rs.getString(2) + " " + rs.getString(3));
         }
     }
 
@@ -83,7 +92,6 @@ public class Server
 
     public static void main(String[] args)
     {
-//        Server serv = new Server();
         new Server();
     }
 }
