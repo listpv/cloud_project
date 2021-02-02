@@ -189,9 +189,7 @@ public class ClientGraph extends JFrame
         serverList = new JList(serverListModel);
         serverList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JPanel clientPanel = new JPanel(new BorderLayout());  // 1-я часть со списком клиента.
-//        JPanel serverPanel = new JPanel(new BorderLayout());  // 2-я часть со списком сервера.
         JLabel clientRepo = new JLabel("Client repo");
-//        JLabel serverRepo = new JLabel("Server repo");
         clientPanel.add(clientRepo, BorderLayout.NORTH);
         clientPanel.add(new JScrollPane(clientList), BorderLayout.CENTER);
         JPanel serverPanel = new JPanel(new BorderLayout());  // 2-я часть со списком сервера.
